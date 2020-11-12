@@ -35,6 +35,7 @@ class Menu extends Model
                     'slug' => Menu::convert_vi_to_en(trim($v->title)),
                     'source' => $v->link,
                     'total' => (int)trim($v->total) + 100,
+                    'parent_check' => ($v->parent !== 0 ) ? $v->parent : null,
                     'level' => (!isset($v->level) || $v->level == 'NULL') ? null : $v->level
                 );
 
