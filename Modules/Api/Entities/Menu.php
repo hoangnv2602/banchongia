@@ -77,6 +77,7 @@ class Menu extends Model
         $str = str_replace("(", "", $str);
         $str = str_replace(")", "", $str);
         $str = str_replace("/", " ", $str);
+        $str = str_replace(" / ", " ", $str);
         $str = str_replace(" ", "-", $str);
         return strtolower($str);
     }
