@@ -4,6 +4,8 @@ namespace Modules\Api\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+
 
 class Menu extends Model
 {
@@ -13,9 +15,21 @@ class Menu extends Model
         $data = json_decode($_POST['dataInsert']);
         // print_r($data);die;
         foreach ($data as $k => $v) {
-            $check = DB::table('menu')->where('title', trim($v->title))->count();
+
             $v->title = str_replace("&amp;", "&", $v->title);
+
+            $para_chec = array(
+                'title' => trim($v->title)
+            );
+            if ($v->parent !== 0 ) {
+                $v->parent = str_replace("&amp;", "&", $v->parent);
+                $para_chec['parent_check'] = $v->parent;
+            }
+
+            $check = DB::table('menu')->where($para_chec)->count();
+
             if ($check == 0) {
+
                 $array_insert = array( 
                     'title' => trim($v->title),
                     'slug' => Menu::convert_vi_to_en(trim($v->title)),
@@ -23,6 +37,11 @@ class Menu extends Model
                     'total' => (int)trim($v->total) + 100,
                     'level' => (!isset($v->level) || $v->level == 'NULL') ? null : $v->level
                 );
+
+                $check_slug = DB::table('menu')->where('slug', Menu::convert_vi_to_en(trim($v->title)))->count();
+
+                if ($check_slug > 0 ) $array_insert['slug'] = $array_insert['slug'].($check_slug+1);
+
                 if ($v->type == 'main') $array_insert['total'] = 0;
 
                 $insert_id = DB::table('menu')->insertGetId($array_insert);
@@ -53,9 +72,45 @@ class Menu extends Model
 
                 $insert_id = DB::table('menu_relationship')->insertGetId($array_insert_r);
 
-                var_dump($insert_id);
+                echo $insert_id. '\n';
+            } else {
+                echo 'exit data.. \n';
             }
         }
+    }
+
+    
+
+    public static function insert()
+    {
+        $data = json_decode($_POST['dataInsert']);
+        
+        foreach ($data as $k => $v) {
+            
+            $check_brand = DB::table('brand')->where('brand', trim($v->brand_id))->get('id');
+            if (count($check_brand) == 0) $v->brand_id = DB::table('brand')->insertGetId( array( 'brand' => trim( $v->brand_id ) ) );
+            else $v->brand_id = $check_brand[0]->id;
+
+            $v->thumnail = base64_encode( file_get_contents($v->thumnail) );
+
+            $check_product = DB::table('product')->where(['title' => trim($v->title), 'category_id' => $v->category_id])->count();
+            
+            $id = 0;
+
+
+            // print_r($v);
+            // die;
+            if ( $check_product == 0 ) $id = DB::table('product')->insertGetId((array)$v);
+            
+            echo  $id;
+        }
+
+    }
+
+    public static function get_menu()
+    {
+        $data = DB::table('menu')->where('level', 'end')->paginate(15);
+        return response()->json($data, 200);
     }
 
     public static function convert_vi_to_en($str) {

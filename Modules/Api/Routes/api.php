@@ -19,4 +19,6 @@ Route::middleware('auth:api')->get('/api', function (Request $request) {
 
 Route::prefix('admin/v1')->group(function() {
     Route::post('/make-category', 'ApiController@create');
+    Route::get('/get_menu', 'ApiController@getPanigationMenu');
+    Route::post('/insert_data', 'ApiController@insert');
 });
