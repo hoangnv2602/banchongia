@@ -15,20 +15,14 @@ class Menu extends Model
             $check = DB::table('menu')->where('title', trim($v->title))->count();
             
             if ($check == 0) {
-
-                $sub_id     = explode( " " , microtime())[0] ;
-                $sub_id     = substr($sub_id , 2, 5); 
-                $id = strtotime(date('Y-m-d H:i:s')).''.$sub_id;
-
                 $array_insert = array( 
-                    'id' => $id,
                     'title' => trim($v->title),
                     'slug' => Menu::convert_vi_to_en(trim($v->title)),
                     'source' => $v->link
                 );
 
-                $insert_id = DB::table('menu')->insert($array_insert);
-
+                $insert_id = DB::table('menu')->insertGetId($array_insert);
+                return $insert_id;
                 $parent_id = 0;
 
                 if ($v->parent !== 0 ) {
