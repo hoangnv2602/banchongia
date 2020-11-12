@@ -51,7 +51,9 @@ class Menu extends Model
 
                 if ($v->type == 'main_1') $array_insert_r['type'] = 'main';
 
-                $insert_id = DB::table('menu_relationship')->insert($array_insert_r);
+                $insert_id = DB::table('menu_relationship')->insertGetId($array_insert_r);
+
+                var_dump($insert_id);
             }
         }
     }
