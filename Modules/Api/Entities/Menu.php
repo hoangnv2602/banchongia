@@ -11,21 +11,26 @@ class Menu extends Model
     public static function create_menu()
     {
         $data = json_decode($_POST['dataInsert']);
+        // print_r($data);die;
         foreach ($data as $k => $v) {
             $check = DB::table('menu')->where('title', trim($v->title))->count();
-            
+            $v->title = str_replace("&amp;", "&", $v->title);
             if ($check == 0) {
                 $array_insert = array( 
                     'title' => trim($v->title),
                     'slug' => Menu::convert_vi_to_en(trim($v->title)),
-                    'source' => $v->link
+                    'source' => $v->link,
+                    'total' => (int)trim($v->total) + 100,
+                    'level' => (!isset($v->level) || $v->level == 'NULL') ? null : $v->level
                 );
+                if ($v->type == 'main') $array_insert['total'] = 0;
 
                 $insert_id = DB::table('menu')->insertGetId($array_insert);
-                return $insert_id;
+                
                 $parent_id = 0;
 
                 if ($v->parent !== 0 ) {
+                    $v->parent = str_replace("&amp;", "&", $v->parent);
                     $parent_id = DB::table('menu')
                                     ->join('menu_relationship', 'menu.id', '=', 'menu_relationship.id_menu')
                                     ->where('menu.title', trim($v->parent))
@@ -36,20 +41,13 @@ class Menu extends Model
                 }
 
                 $array_insert_r = array(
-                    'id' => $id,
-                    'id_menu' => $id,
+                    'id_menu' => $insert_id,
                     'parent' => $parent_id
                 );
 
                 if ($v->type == 'main') $array_insert_r['type'] = 'main';
 
                 if ($v->type == 'category') $array_insert_r['type'] = 'category';
-
-                if ($v->type == 'category_child') {
-                    
-                    $array_insert_r['type'] = 'category';
-                
-                }
 
                 if ($v->type == 'main_1') $array_insert_r['type'] = 'main';
 
@@ -76,6 +74,8 @@ class Menu extends Model
         $str = str_replace(",", "", $str);
         $str = str_replace(" &", "", $str);
         $str = str_replace(" -", "", $str);
+        $str = str_replace("(", "", $str);
+        $str = str_replace(")", "", $str);
         $str = str_replace(" ", "-", $str);
         return strtolower($str);
     }
