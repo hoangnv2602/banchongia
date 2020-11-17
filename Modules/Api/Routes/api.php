@@ -31,3 +31,8 @@ Route::prefix('admin/v2')->group(function() {
     Route::post('/insert_data', 'Api1Controller@insert');
     Route::get('/list_main', 'Api1Controller@check');
 });
+
+Route::prefix('admin/v3')->group(function() {
+    Route::get('/get-list', 'ProductController@getlist');
+    Route::post('/up-data-id', 'ProductController@insert');
+});
