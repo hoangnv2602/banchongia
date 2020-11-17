@@ -21,4 +21,13 @@ Route::prefix('admin/v1')->group(function() {
     Route::post('/make-category', 'ApiController@create');
     Route::get('/get_menu', 'ApiController@getPanigationMenu');
     Route::post('/insert_data', 'ApiController@insert');
+    Route::get('/list-menu', 'IDController@get_menu');
+    Route::post('/up-id', 'IDController@insert');
+});
+
+Route::prefix('admin/v2')->group(function() {
+    Route::post('/make-category', 'Api1Controller@create');
+    Route::get('/get_menu', 'Api1Controller@getPanigationMenu');
+    Route::post('/insert_data', 'Api1Controller@insert');
+    Route::get('/list_main', 'Api1Controller@check');
 });

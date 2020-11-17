@@ -5,53 +5,31 @@ namespace Modules\Api\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\Api\Entities\Menu;
+use Modules\Api\Entities\IDModel;
 
-class ApiController extends Controller
+class IDController extends Controller
 {
-    private $menu;
+    protected $tableid;
+
     public function __construct() {
-        $this->menu = new Menu;
+        $this->tableid = new IDModel;
     }
     /**
      * Display a listing of the resource.
      * @return Renderable
      */
     public function index()
-    {   
+    {
         return view('api::index');
-    }
-
-    /**
-     * Display a listing of the resource.
-     * @return Renderable
-     */
-    public function getPanigationMenu()
-    {   
-        return $this->menu->get_menu();
-    }
-    
-    /**
-     * Display a listing of the resource.
-     * @return Renderable
-     */
-    public function insert()
-    {   
-        return $this->menu->insert();
     }
 
     /**
      * Show the form for creating a new resource.
      * @return Renderable
      */
-    public function create()
+    public function insert()
     {
-        return $this->menu->create_menu();
-    }
-
-    public function check()
-    {
-        return $this->menu->check();
+        return $this->tableid->insert();
     }
 
     /**
@@ -59,9 +37,9 @@ class ApiController extends Controller
      * @param Request $request
      * @return Renderable
      */
-    public function store(Request $request)
+    public function get_menu()
     {
-        //
+        return $this->tableid->get_menu();
     }
 
     /**

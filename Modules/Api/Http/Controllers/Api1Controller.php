@@ -5,13 +5,13 @@ namespace Modules\Api\Http\Controllers;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\Api\Entities\Menu;
+use Modules\Api\Entities\Menu1;
 
-class ApiController extends Controller
+class Api1Controller extends Controller
 {
     private $menu;
     public function __construct() {
-        $this->menu = new Menu;
+        $this->menu = new Menu1;
     }
     /**
      * Display a listing of the resource.

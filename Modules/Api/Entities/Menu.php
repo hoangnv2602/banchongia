@@ -13,17 +13,18 @@ class Menu extends Model
     public static function create_menu()
     {
         $data = json_decode($_POST['dataInsert']);
-        // print_r($data);die;
+        
         foreach ($data as $k => $v) {
-
+            print_r($v);
             $v->title = str_replace("&amp;", "&", $v->title);
+            $v->title = str_replace("&nbsp;", "", $v->title);
 
             $para_chec = array(
                 'title' => trim($v->title)
             );
             if ($v->parent !== 0 ) {
                 $v->parent = str_replace("&amp;", "&", $v->parent);
-                $para_chec['parent_check'] = $v->parent;
+                $para_chec['parent_check'] = 'aaaaaaaaaaaaa';
             }
 
             $check = DB::table('menu')->where($para_chec)->count();
@@ -34,14 +35,15 @@ class Menu extends Model
                     'title' => trim($v->title),
                     'slug' => Menu::convert_vi_to_en(trim($v->title)),
                     'source' => $v->link,
-                    'total' => (int)trim($v->total) + 100,
+                    'total' => $v->total,
                     'parent_check' => ($v->parent !== 0 ) ? $v->parent : null,
+                    // 'parent_total' => ($v->parent !== 0 ) ? $v->parent : null,
                     'level' => (!isset($v->level) || $v->level == 'NULL') ? null : $v->level
                 );
 
-                $check_slug = DB::table('menu')->where('slug', Menu::convert_vi_to_en(trim($v->title)))->count();
+                $check_slug = DB::table('menu')->where('slug', 'like', '%'.Menu::convert_vi_to_en(trim($v->title)).'%')->count();
 
-                if ($check_slug > 0 ) $array_insert['slug'] = $array_insert['slug'].($check_slug+1);
+                if ($check_slug > 0 ) $array_insert['slug'] = $array_insert['slug'].'-'.($check_slug+1);
 
                 if ($v->type == 'main') $array_insert['total'] = 0;
 
@@ -54,10 +56,11 @@ class Menu extends Model
                     $parent_id = DB::table('menu')
                                     ->join('menu_relationship', 'menu.id', '=', 'menu_relationship.id_menu')
                                     ->where('menu.title', trim($v->parent))
+                                    ->orderBy('menu.id', 'DESC')
                                     ->select('menu_relationship.id_menu')
                                     ->get();
                                     
-                    $parent_id =  $parent_id[0]->id_menu;
+                    $parent_id =   ( $parent_id->count() > 0) ? $parent_id[0]->id_menu  : 0;
                 }
 
                 $array_insert_r = array(
@@ -73,7 +76,7 @@ class Menu extends Model
 
                 $insert_id = DB::table('menu_relationship')->insertGetId($array_insert_r);
 
-                echo $insert_id. '\n';
+                echo "---------> ".$insert_id. '     ';
             } else {
                 echo 'exit data.. \n';
             }
@@ -106,6 +109,18 @@ class Menu extends Model
             echo  $id;
         }
 
+    }
+
+    public static function check()
+    {
+        
+        $data = DB::table('menu')
+                ->join('menu_relationship', 'menu.id', '=', 'menu_relationship.id_menu')
+                ->where('menu_relationship.parent', 0)
+                ->orderBy('menu.id', 'DESC')
+                ->select('menu.*')
+                ->get();
+        return response()->json($data, 200);
     }
 
     public static function get_menu()
