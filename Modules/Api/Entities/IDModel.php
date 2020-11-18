@@ -24,7 +24,7 @@ class IDModel extends Model
 
     public static function get_menu()
     {
-        $data = DB::table('menu_test')->where('level', '=', 'end')->paginate(15);
+        $data = DB::table('menu')->where('level', '=', 'end')->paginate(15);
         return response()->json($data, 200);
     }
 

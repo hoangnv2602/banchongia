@@ -27,7 +27,7 @@ class Menu1 extends Model
                     $para_chec['parent_check'] = 'aaaaaaaaaaaaa';
                 }
 
-                $check = DB::table('menu_test')->where($para_chec)->count();
+                $check = DB::table('menu')->where($para_chec)->count();
 
                 if ($check == 0) {
 
@@ -40,23 +40,23 @@ class Menu1 extends Model
                         'parent_total' => 0
                     );
 
-                    $check_slug = DB::table('menu_test')->where('slug', 'like', '%'.Menu1::convert_vi_to_en(trim($v->title)).'%')->count();
+                    $check_slug = DB::table('menu')->where('slug', 'like', '%'.Menu1::convert_vi_to_en(trim($v->title)).'%')->count();
 
                     if ($check_slug > 0 ) $array_insert['slug'] = $array_insert['slug'].'-'.($check_slug+1);
 
                     if ($v->type == 'main') $array_insert['total'] = 0;
 
-                    $insert_id = DB::table('menu_test')->insertGetId($array_insert);
+                    $insert_id = DB::table('menu')->insertGetId($array_insert);
                     
                     $parent_id = 0;
 
                     if ($v->parent !== 0 ) {
                         $v->parent = str_replace("&amp;", "&", $v->parent);
-                        $parent_id = DB::table('menu_test')
-                                        ->join('menu_relationship_test', 'menu_test.id', '=', 'menu_relationship_test.id_menu')
-                                        ->where('menu_test.title', trim($v->parent))
-                                        ->orderBy('menu_test.id', 'DESC')
-                                        ->select('menu_relationship_test.id_menu')
+                        $parent_id = DB::table('menu')
+                                        ->join('menu_relationship', 'menu.id', '=', 'menu_relationship.id_menu')
+                                        ->where('menu.title', trim($v->parent))
+                                        ->orderBy('menu.id', 'DESC')
+                                        ->select('menu_relationship.id_menu')
                                         ->get();
                                         
                         $parent_id =   ( $parent_id->count() > 0) ? $parent_id[0]->id_menu  : 0;
@@ -73,9 +73,9 @@ class Menu1 extends Model
 
                     if ($v->type == 'main_1') $array_insert_r['type'] = 'main';
 
-                    $insert_id = DB::table('menu_relationship_test')->insertGetId($array_insert_r);
+                    $insert_id = DB::table('menu_relationship')->insertGetId($array_insert_r);
                     if (isset($v->parent_update)) {
-                        DB::table('menu_test')
+                        DB::table('menu')
                                 ->where('id', $v->parent_update)
                                 ->update(['parent_total' => 1]);
                     }
@@ -86,7 +86,7 @@ class Menu1 extends Model
                 }
             } else {
                 if (isset($v->parent_update)) {
-                    DB::table('menu_test')
+                    DB::table('menu')
                             ->where('id', $v->parent_update)
                             ->update(['level' => 'end', 'parent_total' => 1]);
                 }
@@ -126,17 +126,17 @@ class Menu1 extends Model
     public static function check()
     {
         
-        $data = DB::table('menu_test')
-                ->join('menu_relationship_test', 'menu_test.id', '=', 'menu_relationship_test.id_menu')
-                ->where('menu_test.parent_total', 0)
-                ->select('menu_test.*')
+        $data = DB::table('menu')
+                ->join('menu_relationship', 'menu.id', '=', 'menu_relationship.id_menu')
+                ->where('menu.parent_total', 0)
+                ->select('menu.*')
                 ->get();
         return response()->json($data, 200);
     }
 
     public static function get_menu()
     {
-        $data = DB::table('menu_test')->where('level', 'end')->paginate(15);
+        $data = DB::table('menu')->where('level', 'end')->paginate(15);
         return response()->json($data, 200);
     }
 

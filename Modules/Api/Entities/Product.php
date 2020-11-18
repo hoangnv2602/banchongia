@@ -18,18 +18,18 @@ class Product extends Model
     {
         $data = json_decode($_POST['dataInsert'])[0];
 
-        $array_insert = array(
-            'name' => $data->name,
-            'thumnail' => file_get_contents($data->thumbnail_url),
-            'description' => $data->description
-        );
+        // $array_insert = array(
+        //     'name' => $data->name,
+        //     'thumnail' => 'http://localhost/server_file/'.file_get_contents("http://localhost/server_file/upload_file.php?type=thumnail&img_url=".$data->thumbnail_url),
+        //     'description' => $data->description
+        // );
 
         // preg_match_all('/<img(.*?)src="(.*?)"/',$data->description, $result);
-
+            
         // if (count($result[2]) > 0 ) {
         //     foreach ($result[2] as $v) {
-        //         $data = base64_encode(file_get_contents($v));
-        //         $array_insert['description'] = str_replace($v, 'data:image/png;base64, '. $data, $array_insert['description']);
+        //         $data = file_get_contents("http://localhost/server_file/upload_file.php?type=content&img_url=".$v);
+        //         $array_insert['description'] = str_replace($v, 'http://localhost/server_file/'.$data, $array_insert['description']);
         //     }
             
         // }
@@ -38,7 +38,7 @@ class Product extends Model
 
         $productset_group_name = str_replace("&amp;", "&", $productset_group_name);
         $productset_group_name = str_replace("&nbsp;", "", $productset_group_name);
-
+        
         if (strpos($productset_group_name, 'I/O Port Cards') !== false) $str = Product::make_cate_gory($productset_group_name, 'I/O Port Cards');
         elseif (strpos($productset_group_name, 'Bộ Phát Wifi Di Động 3G/4G - Mifi') !== false) $str = Product::make_cate_gory($productset_group_name, 'Bộ Phát Wifi Di Động 3G/4G - Mifi');
         elseif (strpos($productset_group_name, 'Gậy tự sướng/ Selfie') !== false) $str = Product::make_cate_gory($productset_group_name, 'Gậy tự sướng/ Selfie');
@@ -56,7 +56,39 @@ class Product extends Model
         elseif (strpos($productset_group_name, 'Túi giữ nhiệt (bình sữa/bình nước)') !== false) $str = Product::make_cate_gory($productset_group_name, 'Túi giữ nhiệt (bình sữa/bình nước)');
         else $str = Product::make_cate_gory($productset_group_name, '');
 
-        echo $str;
+        $list_cate = Product::get_category($productset_group_name, $str);
+        print_r($list_cate);die;
+        // only_ship_to_nested
+        // print_r($data->specifications);
+        $_specifications = array();
+        $product_id = 1;
+        foreach ( $data->specifications as $v ) {
+            foreach ($v->attributes as $vl) {
+                
+                $name = trim($vl->name);
+                $name = str_replace("&amp;", "&", $vl->name);
+                $name = str_replace("&nbsp;", "", $vl->name);
+
+                if ($name == 'Thương hiệu') $thuonghieu = $vl->value;
+                if ($name == 'Xuất xứ thương hiệu') $xuatxuth = $vl->value;
+                
+                // if (isset($thuonghieu)) {
+                //     $id = DB::table('brand')->where('brand', $thuonghieu)->get();
+                //     if ($id->count() == 0) DB::table('brand')->insert(['brand' => $thuonghieu, 'slug' => Product::convert_vi_to_en($thuonghieu)]);
+                // }
+
+                $arr = array();
+                $arr['product_id'] = $product_id;
+                $arr['meta_key'] = Product::convert_vi_to_en($name);
+                $arr['meta_value'] = $vl->value;
+                $arr['title_show'] = $name;
+                array_push($_specifications, $arr);
+
+            
+            }
+        }
+        print_r($_specifications);
+        // echo $str;
 
 
         // echo $data->description;
@@ -73,6 +105,29 @@ class Product extends Model
         else $str = "('".implode("', '",$arr)."')";
 
         return $str;
+    }
+
+    public static function get_category($main_category, $list)
+    {
+        $main = explode('/', $main_category)[0];
+        $check = DB::table('menu')->where('title', '=', $main)->get();
+        $id = $check[0]->id;
+
+        $lists = DB::select("SELECT d.id
+                            FROM (
+                                SELECT ".$id." AS id
+                                UNION ALL
+                                (SELECT  id_menu
+                                FROM menu_relationship
+                                CROSS JOIN (SELECT @pv := ".$id.") initialisation
+                                WHERE   find_in_set(parent, @pv) > 0
+                                    AND   @pv := concat(@pv, ',', id)
+                                ORDER BY parent, id)
+                                ) c
+                            JOIN menu p ON p.id = c.id
+                            JOIN menu_relationship d ON d.id_menu = p.id
+                            WHERE p.title IN ".$list."");
+        return $lists;
     }
 
     public static function convert_vi_to_en($str) {
